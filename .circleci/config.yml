@@ -68,7 +68,7 @@ jobs:
           key: v1-backfrontend-build
           paths:
             - ~/project/frontend/node_modules
- 
+
   build-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -319,11 +319,11 @@ cleanup:
 workflows:
   default:
     jobs:
-         - install-backend-dependencies
-         - install-frontend-dependencies
-    #  - build-frontend:
-    #      requires:
-    #        - install-frontend-dependencies
+      - install-backend-dependencies
+      - install-frontend-dependencies
+      - build-frontend:
+          requires:
+            - install-frontend-dependencies
     #  - build-backend:
     #      requires:
     #        - install-backend-dependencies

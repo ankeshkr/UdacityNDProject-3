@@ -134,6 +134,7 @@ jobs:
           name: Check Frontend against security vulnerabilities
           command: |
             cd frontend
+            npm i
             npm audit fix --audit-level=critical
       - restore_cache:
           key: v1-frontend-build
@@ -147,6 +148,7 @@ jobs:
           name: Check Backend against security vulnerabilities
           command: |
             cd backend
+            npm i
             npm audit fix --audit-level=critical
       - restore_cache:
           key: v1-backend-build

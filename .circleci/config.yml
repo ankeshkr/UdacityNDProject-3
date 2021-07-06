@@ -136,6 +136,7 @@ jobs:
           name: Check Frontend against security vulnerabilities
           command: |
             cd frontend
+            npm i
             npm audit fix --audit-level=critical
 
   scan-backend:

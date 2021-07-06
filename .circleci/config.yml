@@ -74,12 +74,12 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - attach_workspace:
-          at: .
       - run:
-          name: Build front-end
-          working_directory: ./frontend
-          command: npm run build 
+          name: Frontend Build
+          command: |
+            cd frontend
+            npm i
+            npm run build
       - save_cache:
           key: v1-frontend-build
           paths:

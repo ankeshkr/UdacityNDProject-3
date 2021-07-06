@@ -148,6 +148,7 @@ jobs:
           name: Check Backend against security vulnerabilities
           command: |
           cd backend
+          npm i
           npm audit fix --audit-level=critical --force
 
   deploy-infrastructure:

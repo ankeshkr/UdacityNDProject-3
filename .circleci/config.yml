@@ -134,7 +134,6 @@ jobs:
           name: Check Frontend against security vulnerabilities
           command: |
             cd frontend
-            npm i
             npm audit fix --audit-level=critical
       - restore_cache:
           key: v1-frontend-build
@@ -144,12 +143,13 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - attach_workspace:
-          at: .
       - run:
           name: Check Backend against security vulnerabilities
-          working_directory: ./backend
-          command: npm audit fix --audit-level=critical
+          command: |
+            cd backend
+            npm audit fix --audit-level=critical
+      - restore_cache:
+          key: v1-backend-build
 
   deploy-infrastructure:
     docker:

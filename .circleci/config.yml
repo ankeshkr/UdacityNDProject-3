@@ -16,27 +16,28 @@ commands:
           name: Delete s3 bucket
           when: on_fail
           command: |
-            aws S3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}
+            aws S3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive
 
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
     parameters:
-      # Add parameter here     
+      when:
+        type: string
+      id:
+        type: string     
     steps:
       - run:
           name: Revert migrations
           working_directory: ./backend
-          # Add when this will run
           command: |
-            SUCCESS=$(curl -H "token: a497ba39-5d14-4352-89ca-477a1b1f1728" --request GET https://api.memstash.io/values/DB_MIGRATION_on_fail)
-            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
+            SUCCESS=$(curl -H "token: a497ba39-5d14-4352-89ca-477a1b1f1728" --request GET https://api.memstash.io/values/DB_MIGRATION_${CIRCLE_WORKFLOW_ID:0:7})
             SUCCESS = 1
             if(( $SUCCESS==1 )); 
             then
               pwd
               ls -la
-              npm run migration:revert
+              npm run migrations:revert
             fi
           when: on_fail
             

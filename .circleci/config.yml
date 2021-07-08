@@ -371,6 +371,7 @@ workflows:
             branches:
               only: 
                 - master
+    # added a comment
     #  - configure-infrastructure:
     #      requires: 
     #        - deploy-infrastructure

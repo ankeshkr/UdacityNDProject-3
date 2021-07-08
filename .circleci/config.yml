@@ -281,7 +281,7 @@ jobs:
           name: Get backend url
           command: |
             # your code here
-            export API_URL=$(curl -H "token: c9c28e9f-179a-42bb-a78c-55671d15c8b7" --request GET https://api.memstash.io/values/BACKEND_URL)
+            export API_URL=$(curl -H "token: a497ba39-5d14-4352-89ca-477a1b1f1728" --request GET https://api.memstash.io/values/BACKEND_URL)
             echo "${API_URL}"
             npm run build
       - run:
@@ -301,77 +301,123 @@ jobs:
                     
   deploy-backend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: python:3.9.0-alpine
     steps:
-      # Checkout code from git
-      # Add ssh keys with fingerprint
-      # attach workspace
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["f4:13:68:a7:d6:26:a4:67:aa:dd:10:fb:9c:17:70:98"]
+      - attach_workspace:
+          at: .
+    
       - run:
           name: Install dependencies
+          working_directory: ./.circleci/ansible
           command: |
-            # your code here
+            apk add --update ansible curl rsync openssh nodejs npm
+            ansible --version
+            pip3 install --upgrade pip
+            pip3 install awscli
+            aws --version 
+            export ANSIBLE_HOST_KEY_CHECKING=False
       - run:
           name: Deploy backend
+          working_directory: ./.circleci/ansible
           command: |
-            # your code here
-      # Here's where you will add some code to rollback on failure  
+            export ANSIBLE_HOST_KEY_CHECKING=False 
+            export host_key_checking=False
+            export record_host_keys=False
+            cat inventory
+            ansible-playbook -i inventory deploy-backend.yml -vv
+      # Here's where you will add some code to rollback on failure
+      - destroy-environment
+      - revert-migrations
 
   smoke-test:
     docker:
-      - image: circleci/node:13.8.0 
+      - image: python:3.9.0-alpine 
     steps:
-      # Checkout code from git
+      - checkout
+      - attach_workspace:
+          at: .
       - run:
           name: Install dependencies
+          working_directory: /tmp
           command: |
-            # your code here
-      - run:
-          name: Get backend url
-          command: |
-            # your code here
+            apk add --update curl nodejs npm
+            pip install awscli
       - run:
           name: Backend smoke test.
+          working_directory: ./backend
           command: |
-            # your code here
+            export BACKEND_URL=$(curl -H "token: a497ba39-5d14-4352-89ca-477a1b1f1728" --request GET https://api.memstash.io/values/BACKEND_URL)
+            curl "$BACKEND_URL/api/status"
       - run:
           name: Frontend smoke test.
+          working_directory: ./backend
           command: |
-            # your code here
-      # Here's where you will add some code to rollback on failure  
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.us-west-2.amazonaws.com/index.html"
+            curl -s ${URL} | grep -q "Welcome"
+      - destroy-environment:
+      - revert-migrations:
 
   cloudfront-update:
     docker:
       - image: circleci/node:13.8.0
     steps:
       # Checkout code from git
+      - checkout
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            yum install -y tar gzip curl
+            curl -sL https://rpm.nodesource.com/setup_10.x | bash -
+            yum install -y nodejs
+      - run:
+          name: get old workflow if from memstash for cleanup phase
+          working_directory: ./.circleci/files
+          command: |
+            WorkflowID=$(aws cloudformation \
+              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+              --no-paginate --output text)
+            curl -H "Content-Type: text/plain" -H "token: a497ba39-5d14-4352-89ca-477a1b1f1728 --request PUT --data "$WorkflowID" https://api.memstash.io/values/WorkflowID
       - run:
           name: Update cloudfront distribution
+          working_directory: ./.circleci/files
           command: |
-            # your code here
-      # Here's where you will add some code to rollback on failure  
+            aws cloudformation deploy \
+              --template-file cloudfront.yml \
+              --stack-name udapeople-cloudfront-production \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=udapeople
+      # Here's where you will add some code to rollback on failure 
+      - revert-migrations 
 
 cleanup:
     docker:
       - image: circleci/node:13.8.0
     steps:
       # Checkout code from git
+      - checkout
       - run:
           name: Get old stack workflow id
           command: |
             # your code here
-            export OldWorkflowID="the id here"
-            export STACKS=[] #put the list of stacks here
+            OldWorkflowID=$(curl -H "token: a497ba39-5d14-4352-89ca-477a1b1f1728" --request GET https://api.memstash.io/values/WorkflowID)
+            CurrentWorkflowID=${CIRCLE_WORKFLOW_ID:0:7}
       - run:
           name: Remove old stacks and files
           command: |
-            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+            if [[ "$CurrentWorkflowID" != "$OldWorkflowID" ]]
             then
-              # your code here
+              echo "$OldWorkflowID!=$CurrentWorkflowID => will delete old version"
+              aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
+              aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
+              aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
+            else
+              echo "$OldWorkflowID==$CurrentWorkflowID => nothing needs to be done..."
             fi
+          environment:
+            TERM: xterm-256color
             
 
 workflows:
@@ -411,15 +457,15 @@ workflows:
       - configure-infrastructure:
           requires: 
             - deploy-infrastructure
-    #  - run-migrations:
-    #      requires: 
-    #        - configure-infrastructure
-    #  - deploy-frontend:
-    #      requires: 
-    #        - run-migrations
-    #  - deploy-backend:
-    #      requires: 
-    #        - run-migrations
+      - run-migrations:
+          requires: 
+            - configure-infrastructure
+      - deploy-frontend:
+          requires: 
+            - run-migrations
+      - deploy-backend:
+          requires: 
+            - run-migrations
     #  - smoke-test:
     #      requires: 
     #        - deploy-backend 

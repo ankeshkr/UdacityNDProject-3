@@ -214,16 +214,24 @@ jobs:
           fingerprints: ["a8:4c:f9:05:9e:8f:f3:86:c5:20:14:9a:f8:df:8a:31"]
       # attach workspace
       - attach_workspace:
-          at: ~/
+          at: .
       - run:
           name: Install dependencies
+          working_directory: ./.circleci/ansible
           command: |
             apk add --update ansible
+            ansible --version
+            pip3 install --upgrade pip
+            pip3 install awscli
+            aws --version
       - run:
           name: Configure server
+          working_directory: ./.circleci/ansible
           command: |
-            cd ~/project/.circleci/ansible
-            ansible-playbook -i inventory.txt configure-server.yml
+            pwd &&
+            ls -la
+            cat inventory
+            ansible-playbook -i inventory configure-server.yml
       - destroy-environment     
 
   run-migrations:

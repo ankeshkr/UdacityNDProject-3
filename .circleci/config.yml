@@ -320,8 +320,10 @@ jobs:
             export ANSIBLE_HOST_KEY_CHECKING=False
       - run:
           name: Deploy backend
-          working_directory: ./.circleci/ansible
+          working_directory: ./.circleci/ansible          
           command: |
+            [[ ! -d backend ]] && mkdir backend
+            myenv="backend/.env"
             export ANSIBLE_HOST_KEY_CHECKING=False 
             export host_key_checking=False
             export record_host_keys=False

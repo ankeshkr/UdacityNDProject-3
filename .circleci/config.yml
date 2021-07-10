@@ -16,7 +16,7 @@ commands:
           name: Delete s3 bucket
           when: on_fail
           command: |
-            aws S3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive
+            aws S3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
 
 
   revert-migrations:
@@ -164,6 +164,7 @@ jobs:
           command: yum install -y tar gzip
       - run:
           name: Ensure back-end infrastructure exists
+          working_directory: ./.circleci/files
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
@@ -182,6 +183,7 @@ jobs:
       
       - run:
           name: Ensure front-end infrastructure exist
+          working_directory: ./.circleci/files
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \

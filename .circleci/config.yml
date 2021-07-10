@@ -46,10 +46,10 @@ jobs:
           name: npm install
           working_directory: ./backend
           command: ls -la && npm install
-      - save_cache:
-          key: v1-backend-build
+      - persist_to_workspace:
+          root: .
           paths:
-            - ~/project/backend/node_modules
+            - backend/node_modules
 
   install-frontend-dependencies:
     docker:
@@ -60,10 +60,10 @@ jobs:
           name: npm install
           working_directory: ./frontend
           command: ls -la && npm install
-      - save_cache:
-          key: v1-frontend-build
+      - persist_to_workspace:
+          root: .
           paths:
-            - ~/project/frontend/node_modules
+            - frontend/node_modules
 
   build-frontend:
     docker:

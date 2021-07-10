@@ -1,0 +1,5 @@
+GIT HUB URL: https://github.com/ankeshkr/UdacityNDProject-3
+S3 bucket:http://udapeople-21a495d.s3-website-us-west-1.amazonaws.com/
+CLoudfront: drmfqveahq5ba.cloudfront.net
+Backend EC2: https://ec2-13-56-233-159.us-west-1.compute.amazonaws.com/
+Public URL PRometheus:http://ec2-18-144-125-6.us-west-1.compute.amazonaws.com:9090/service-discovery

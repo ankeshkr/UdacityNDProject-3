@@ -70,9 +70,9 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - run:
       - attach_workspace:
           at: .
+      - run:
           name: Frontend Build
           command: |
             cd frontend

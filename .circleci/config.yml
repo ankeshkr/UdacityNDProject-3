@@ -76,10 +76,10 @@ jobs:
             cd frontend
             npm i
             npm run build
-      - save_cache:
-          key: v1-frontend-build
+      - persist_to_workspace:
+          root: .
           paths:
-            - ~/project/frontend/node_modules
+            - frontend/dist
 
   build-backend:
     docker:
@@ -92,10 +92,10 @@ jobs:
             cd backend
             npm i
             npm run build
-      - save_cache:
-          key: v1-backend-build
+      - persist_to_workspace:
+          root: .
           paths:
-            - ~/project/backend/node_modules
+            - backend/dist
   
   test-frontend:
     docker:
@@ -322,8 +322,6 @@ jobs:
           name: Deploy backend
           working_directory: ./.circleci/ansible          
           command: |
-            [[ ! -d backend ]] && mkdir backend
-            myenv="backend/.env"
             export ANSIBLE_HOST_KEY_CHECKING=False 
             export host_key_checking=False
             export record_host_keys=False
